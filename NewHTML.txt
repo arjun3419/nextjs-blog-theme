@@ -1,0 +1,11 @@
+<p><!DOCTYPE html> <html lang=&quot;en&quot;> <head>  <meta charset=&quot;UTF-8&quot;>  <meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;>  <title>5-Wheel Spinner</title>  <style>  body {  display: flex;  justify-content: center;  align-items: center;  height: 100vh;  margin: 0;  background-color: #f0f0f0;  }</p>
+
+<p> .spinner {  width: 200px;  height: 200px;  border-radius: 50%;  background-color: #f44336;  display: flex;  justify-content: center;  align-items: center;  cursor: pointer;  animation: spin 4s infinite;  }</p>
+
+<p> @keyframes spin {  0% { transform: rotate(0deg); }  100% { transform: rotate(360deg); }  }  </style> </head> <body>  <div class=&quot;spinner&quot; onclick=&quot;spinWheel()&quot;>  <span style=&quot;font-size: 24px; color: white;&quot;>SPIN</span>  </div></p>
+
+<p> <script>  function spinWheel() {  const spinner = document.querySelector('.spinner');  const randomDegree = Math.floor(Math.random() * 360);  spinner.style.animation = &#96;spin 4s ease-out 1 forwards&#96;;  spinner.style.transform = &#96;rotate(${randomDegree}deg)&#96;;</p>
+
+<p> setTimeout(() => {  alert(&#96;You landed on ${getLandedSection(randomDegree)}&#96;);  spinner.style.animation = '';  spinner.style.transform = '';  }, 4000);  }</p>
+
+<p> function getLandedSection(degree) {  const sections = ['Section 1', 'Section 2', 'Section 3', 'Section 4', 'Section 5'];  const degreePerSection = 360 / sections.length;  const landedSectionIndex = Math.floor((degree % 360) / degreePerSection);  return sections[landedSectionIndex];  }  </script> </body> </html</p>
