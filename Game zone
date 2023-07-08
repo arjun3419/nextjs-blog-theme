@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Number Puzzle</title>
+  <style>
+    .puzzle {
+      display: flex;
+      flex-wrap: wrap;
+      width: 400px;
+      height: 400px;
+      border: 2px solid #000;
+    }
+    .puzzle div {
+      box-sizing: border-box;
+      width: 100px;
+      height: 100px;
+      border: 1px solid #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Number Puzzle</h1>
+  
+  <div class="puzzle"></div>
+  <div id="timer">Time: 00:00</div>
+  <button id="shareButton" disabled>Share</button>
+
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script>
+    // Configuration
+    const gridSize = 4; // Change this value to adjust the grid size
+    const images = ["image1.jpg", "image2.jpg", "image3.jpg"]; // Add your own image paths here
+
+    let startTime = null;
+    let timerInterval = null;
+
+    // Generate random grid positions
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    // Create the grid
+    const puzzleContainer = document.querySelector('.puzzle');
+    const tiles = Array.from({length: gridSize * gridSize - 1}, (_, index) => {
+      const tile = document.createElement('div');
+      tile.textContent = index + 1;
+      tile.style.backgroundImage = `url(${images[Math.floor(index / 2) % images.length]})`;
+      tile.addEventListener('click', () => moveTile(tile));
+      puzzleContainer.appendChild(tile);
+      return tile;
+    });
+
+    // Add empty cell to the grid
+    const emptyTile = document.createElement('div');
+    emptyTile.classList.add('empty');
+    puzzleContainer.appendChild(emptyTile);
+
+    // Shuffle the tiles
+    const shuffledTiles = shuffleArray([...tiles, emptyTile]);
+    shuffledTiles.forEach((tile, index) => {
+      tile.style.order = index;
+    });
+
+    // Move tile when clicked
+    function moveTile(tile) {
+      if (startTime === null) {
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 1000);
+        document.getElementById('shareButton').removeAttribute('disabled');
+      }
+
+      const emptyIndex = shuffledTiles.findIndex(t => t.classList.contains('empty'));
+      const tileIndex = shuffledTiles.indexOf(tile);
+      const distance = Math.abs(emptyIndex % gridSize - tileIndex % gridSize) + Math.abs(Math.floor(emptyIndex / gridSize) - Math.floor(tileIndex / gridSize));
+
+      if (distance === 1) {
+        [shuffledTiles[emptyIndex], shuffledTiles[tileIndex]] = [shuffledTiles[tileIndex], shuffledTiles[emptyIndex]];
+        shuffledTiles.forEach((tile, index) => {
+          tile.style.order = index;
+        });
+
+        if (isSolved()) {
+          clearInterval(timerInterval);
+          const elapsedTime = getFormattedTime(Date.now() - startTime);
+          document.getElementById('shareButton').removeAttribute('disabled');
+          alert(`Congratulations! Puzzle solved in ${elapsedTime}!`);
+          // You can add code here to reset the game or perform any other action
+        }
+      }
+    }
+
+    // Check if the puzzle is solved
+    function isSolved() {
+      return shuffledTiles.every((tile, index) => {
+        return parseInt(tile.textContent) === index + 1;
+      });
+    }
+
+    // Update the timer display
+    function updateTimer() {
+      const elapsedTime = Date.now() - startTime;
+      const formattedTime = getFormattedTime(elapsedTime);
+      document.getElementById('timer').textContent = `Time: ${formattedTime}`;
+    }
+
+    // Format time as MM:SS
+    function getFormattedTime(time) {
+      const minutes = Math.floor(time / 60000).toString().padStart(2, '0');
+      const seconds = Math.floor((time % 60000) / 1000).toString().padStart(2, '0');
+      return `${minutes}:${seconds}`;
+    }
+
+    // Share the puzzle game
+    const shareButton = document.getElementById('shareButton');
+    if (navigator.share) {
+      shareButton.addEventListener('click', () => {
+        const shareData = {
+          title: 'Number Puzzle',
+          text: 'Can you solve this number puzzle?',
+          url: window.location.href
+        };
+
+        // Capture screenshot of the webpage
+        html2canvas(document.body).then(canvas => {
+          // Convert canvas to data URL
+          const imageDataUrl = canvas.toDataURL('image/png');
+
+          // Create a Blob object from the data URL
+          const blob = dataURLtoBlob(imageDataUrl);
+
+          // Attach the image file to the shareData
+          shareData.files = [new File([blob], 'puzzle_screenshot.png', {type: 'image/png'})];
+
+          // Share the puzzle game
+          navigator.share(shareData)
+            .then(() => console.log('Shared successfully'))
+            .catch((error) => console.log('Error sharing:', error));
+        });
+      });
+    } else {
+      shareButton.style.display = 'none';
+    }
+
+    // Convert data URL to Blob object
+    function dataURLtoBlob(dataURL) {
+      const parts = dataURL.split(';base64,');
+      const contentType = parts[0].split(':')[1];
+      const raw = window.atob(parts[1]);
+      const rawLength = raw.length;
+      const uInt8Array = new Uint8Array(rawLength);
+
+      for (let i = 0; i < rawLength; ++i) {
+        uInt8Array[i] = raw.charCodeAt(i);
+      }
+
+      return new Blob([uInt8Array], { type: contentType });
+    }
+  </script>
+</body>
+</html>
